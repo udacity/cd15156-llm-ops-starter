@@ -3,6 +3,7 @@
 from typing import Literal
 
 from dotenv import load_dotenv
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 # Load .env into os.environ early so libraries that read environment
@@ -26,9 +27,19 @@ class Settings(BaseSettings):
 
     # API keys
     openai_api_key: str = ""
-    # Empty string means "use the SDK default (https://api.openai.com/v1)".
-    # Set to https://openai.vocareum.com/v1 when running with a Vocareum key.
-    openai_base_url: str = ""
+    # None means "use the SDK default (https://api.openai.com/v1)". The
+    # shipped `.env.example` pre-sets this to the Vocareum endpoint
+    # because course workspaces issue Vocareum keys. Empty / whitespace
+    # values from `.env` are coerced to None so the OpenAI SDK never
+    # receives `base_url=""` (which would point requests at nothing).
+    openai_base_url: str | None = None
+
+    @field_validator("openai_base_url", mode="before")
+    @classmethod
+    def _empty_base_url_is_none(cls, value: object) -> object:
+        if isinstance(value, str) and value.strip() == "":
+            return None
+        return value
 
     # Chroma — embedded persistent store (no Docker). Files are written
     # under this path; safe to delete and reload via `make load-data`.

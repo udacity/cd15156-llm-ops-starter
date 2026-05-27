@@ -62,3 +62,20 @@ def test_cli_handles_empty_log(cli_module, tmp_path, capsys):
     exit_code = cli_module.main(["--log", str(tmp_path / "missing.jsonl")])
     assert exit_code == 0
     assert "No records in cost log" in capsys.readouterr().out
+
+
+def test_cli_prints_per_tier_summary(cli_module, cost_log, capsys):
+    cli_module.main(["--log", str(cost_log)])
+
+    out = capsys.readouterr().out
+    assert "Per-tier summary:" in out
+    # gpt-4o dominates total spend (1 × $0.0045 = $0.0045) and should
+    # print first; gpt-4o-mini follows (2 × $0.000270 = $0.000540).
+    gpt4o_idx = out.index("gpt-4o ")
+    mini_idx = out.index("gpt-4o-mini")
+    assert gpt4o_idx < mini_idx
+    # Counts + per-query averages appear verbatim in the per-tier block.
+    assert "N=   1" in out
+    assert "N=   2" in out
+    assert "avg=$0.0045/query" in out
+    assert "avg=$0.0003/query" in out

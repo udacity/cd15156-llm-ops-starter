@@ -7,6 +7,7 @@ savings from the tiered routing.
 
 import argparse
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 from src.cost.tracker import load_log
@@ -26,6 +27,22 @@ def baseline_cost(records: list[dict], baseline_model: str) -> float:
             ),
         )
     return total
+
+
+def per_tier_summary(records: list[dict]) -> list[tuple[str, int, float, float]]:
+    """Group records by ``model`` and return (model, count, avg_cost, total) per tier.
+
+    Sorted by total spend descending so the dominant tier reads first.
+    """
+    buckets: dict[str, list[float]] = defaultdict(list)
+    for r in records:
+        buckets[r["model"]].append(r["cost_usd"])
+    rows = [
+        (model, len(costs), sum(costs) / len(costs), sum(costs))
+        for model, costs in buckets.items()
+    ]
+    rows.sort(key=lambda row: row[3], reverse=True)
+    return rows
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,6 +76,16 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Actual cost:       ${actual:.4f}")
     print(f"Baseline ({args.baseline}): ${baseline:.4f}")
     print(f"Savings:           ${savings:.4f} ({pct:.1f}%)")
+
+    rows = per_tier_summary(records)
+    if rows:
+        width = max(len(model) for model, *_ in rows)
+        print()
+        print("Per-tier summary:")
+        for model, count, avg, total in rows:
+            print(
+                f"  {model:<{width}}  N={count:>4}  avg=${avg:.4f}/query  total=${total:.4f}"
+            )
     return 0
 
 
