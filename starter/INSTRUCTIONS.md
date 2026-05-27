@@ -48,29 +48,34 @@ in a week; you'll be running it like it's yours.
 
 ## 2. What You Will Build
 
-You will produce evidence for **9 required deliverables** plus up to
-**2 bonus deliverables**. The starter implements every layer; your job
-is to extend or measure each layer in a specific, graded way.
+You will produce evidence for **9 required deliverables**. The starter
+implements every layer; your job is to extend or measure each layer in
+a specific, graded way. A handful of optional stand-out ideas
+(semantic cache, streaming, a third routing tier, cost projection at
+scale) are listed at the end — they aren't separately graded but make
+for a stronger submission.
 
 Track your progress against this list. Each item links to the task
 in §6 and the matching rubric row.
 
 **Required (1–9):**
 
-- [ ] 1. Vector database populated — [Task 1](#task-1--populate-the-vector-database-30-min) · [Rubric §1](rubric.md#1-vector-database-populated)
-- [ ] 2. RAG pipeline with structured JSON output — [Task 2](#task-2--rag-pipeline-with-structured-output-45-min) · [Rubric §2](rubric.md#2-rag-pipeline-with-structured-output)
-- [ ] 3. LLM gateway with tiered model routing — [Task 3](#task-3--llm-gateway-with-tiered-routing-20-min) · [Rubric §3](rubric.md#3-llm-gateway-with-tiered-routing)
-- [ ] 4. Automated data ingestion via file watcher — [Task 4](#task-4--automated-data-ingestion-20-min) · [Rubric §4](rubric.md#4-automated-data-ingestion-file-watcher)
-- [ ] 5. Automated evaluation suite (RAGAS) — [Task 5](#task-5--automated-evaluation-suite-45-min) · [Rubric §5](rubric.md#5-automated-evaluation-suite)
+- [ ] 1. Vector store populated with chunked, embedded products — [Task 1](#task-1--populate-the-vector-database-30-min) · [Rubric §1](rubric.md#1-vector-store-populated-with-chunked-embedded-product-documents)
+- [ ] 2. RAG pipeline with structured JSON output **and** a `top_k` sweep — [Task 2](#task-2--rag-pipeline-with-structured-output-45-min) · [Rubric §2](rubric.md#2-rag-pipeline-with-structured-output-and-a-tuned-retrieval-depth)
+- [ ] 3. Tiered model routing via the LLM gateway — [Task 3](#task-3--llm-gateway-with-tiered-routing-20-min) · [Rubric §3](rubric.md#3-tiered-model-routing-via-the-llm-gateway)
+- [ ] 4. Automated data ingestion + quarantine — [Task 4](#task-4--automated-data-ingestion-20-min) · [Rubric §4](rubric.md#4-automated-data-ingestion-with-quarantine-for-malformed-inputs)
+- [ ] 5. Automated evaluation suite (RAGAS) with a data-driven threshold — [Task 5](#task-5--automated-evaluation-suite-45-min) · [Rubric §5](rubric.md#5-automated-evaluation-suite-with-a-data-driven-regression-threshold)
 - [ ] 6. Input and output guardrails — [Task 6](#task-6--input-and-output-guardrails-125-hours) · [Rubric §6](rubric.md#6-input-and-output-guardrails)
-- [ ] 7. Distributed tracing (Phoenix) — [Task 7](#task-7--distributed-tracing-20-min) · [Rubric §7](rubric.md#7-distributed-tracing)
-- [ ] 8. Cost monitoring dashboard — [Task 8](#task-8--cost-monitoring-dashboard-15-min) · [Rubric §8](rubric.md#8-cost-monitoring-dashboard)
-- [ ] 9. Cost savings analysis (tiered vs. baseline) — [Task 9](#task-9--cost-savings-analysis-15-min) · [Rubric §9](rubric.md#9-cost-savings-analysis-tiered-vs-baseline)
+- [ ] 7. Distributed tracing (Phoenix) — [Task 7](#task-7--distributed-tracing-20-min) · [Rubric §7](rubric.md#7-distributed-tracing-of-the-request-pipeline)
+- [ ] 8. Cost monitoring, per-tier summary, and savings vs. baseline — [Task 8](#task-8--cost-monitoring-per-tier-summary-and-savings-analysis-30-min) · [Rubric §8](rubric.md#8-cost-monitoring-per-tier-summary-and-savings-vs-a-single-model-baseline)
+- [ ] 9. Documented, reproducible submission — [Task 9](#task-9--documented-reproducible-submission-30-min) · [Rubric §9](rubric.md#9-documented-implementation-evidence-and-reproducible-repository)
 
-**Bonus (10–11):**
+**Stand-out (optional, not separately graded):**
 
-- [ ] 10. Semantic caching — [Bonus Task 10](#bonus-task-10--semantic-cache) · [Rubric §10](rubric.md#10-semantic-cache-bonus)
-- [ ] 11. Latency optimization via streaming — [Bonus Task 11](#bonus-task-11--latency-optimization-via-streaming) · [Rubric §11](rubric.md#11-latency-optimization-via-streaming-bonus)
+- [ ] Semantic caching — [Stand-out: Semantic Cache](#stand-out-semantic-cache)
+- [ ] Latency optimization via streaming — [Stand-out: Streaming/TTFT](#stand-out-streamingttft)
+- [ ] A third routing tier — see [Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) in the rubric
+- [ ] Cost projection at scale — see [Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) in the rubric
 
 For the architecture and the file map, see
 [`README.md`](README.md).
@@ -149,14 +154,18 @@ OPENAI_API_KEY=voc-...                              # from the Workspace
 OPENAI_BASE_URL=https://openai.vocareum.com/v1      # routes calls through the Vocareum proxy
 ```
 
-The `OPENAI_BASE_URL` line is what tells the OpenAI SDK to send
-requests to Vocareum's proxy instead of `api.openai.com` directly —
-your `voc-...` key only works against that proxy.
+The shipped `.env.example` already pre-sets `OPENAI_BASE_URL` to the
+Vocareum endpoint, so copying it into `.env` is enough. The
+`OPENAI_BASE_URL` line is what tells the OpenAI SDK to send requests
+to Vocareum's proxy instead of `api.openai.com` directly — your
+`voc-...` key only works against that proxy.
 
 If you happen to be running the project outside the Workspace with a
 personal OpenAI key (prefix `sk-...`), use `OPENAI_API_KEY=sk-...`
-and leave `OPENAI_BASE_URL` empty to fall back to OpenAI's default
-endpoint.
+and either comment out the `OPENAI_BASE_URL` line in `.env` or set
+it to an empty value to fall back to OpenAI's default endpoint. The
+config layer coerces empty / whitespace-only values to `None`, so
+either form works.
 
 Tracing runs entirely in-process. To disable it (e.g. for tests or
 debugging), set `TRACING_BACKEND=none`. Otherwise Phoenix launches at
@@ -303,9 +312,16 @@ For each deliverable, the format is:
 
 - **What the starter ships**: `POST /query` returns a `QueryResponse`
   with all expected fields populated.
-- **Your task**: Compare RAGAS metrics at `top_k ∈ {3, 5, 10}` and
-  recommend a value with a justification grounded in the metric
-  tradeoffs.
+- **Your task** (two parts, both required):
+  1. Capture one `POST /query` curl whose response is a full
+     `QueryResponse` JSON — every field (`answer`, `sources`,
+     `confidence`, `model`, `tokens`, `cost_usd`, `cached`,
+     `trace_id`, `blocked_by`) populated, with `sources[]` carrying
+     `doc_id`, `chunk_text`, and `similarity_score`.
+  2. Run a `top_k` sweep at `top_k ∈ {3, 5, 10}`, report all four
+     RAGAS metrics for each setting, name a recommended `top_k`, and
+     cite **at least two per-metric deltas** from the sweep table to
+     justify the recommendation.
 - **Recommended path** (one command, ~5–10 min wall clock):
   ```bash
   make eval-topk-sweep   # runs RAGAS at top_k=3,5,10 and prints a comparison table
@@ -317,7 +333,10 @@ For each deliverable, the format is:
   scratch script — `top_k` is a parameter on both
   `evaluate_pipeline` and `build_eval_dataset` and threads through
   `run_pipeline`.
-- **Rubric**: §2 RAG Pipeline With Structured Output.
+- **Rubric**: §2 RAG pipeline with structured output and a tuned
+  retrieval depth. The sweep is part of the pass threshold — a
+  sweep table missing or covering fewer than three `top_k` values
+  fails the row.
 
 ### Task 3 — LLM Gateway With Tiered Routing (~20 min)
 
@@ -407,11 +426,17 @@ For each deliverable, the format is:
   `data/golden_test_set.csv` and reports the four stable metrics:
   `faithfulness`, `answer_relevancy`, `context_recall`,
   `context_precision`.
-- **Your task**: Run `make eval`. Interpret the results: which metric
-  is weakest, and why might that be on this dataset? Propose a
-  **regression threshold** for at least one metric (e.g.,
-  "faithfulness must be ≥0.8") and justify the threshold based on
-  what you observed.
+- **Your task**: Run `make eval` and capture the aggregate metrics
+  table in your writeup. Your §5 must include all four required
+  elements (each is a separate fail trigger in the rubric):
+  1. **Name the lowest-scoring metric** of the four.
+  2. **Propose a plausible cause** grounded in the dataset or the
+     pipeline (chunking, retrieval coverage, prompt phrasing, etc.).
+  3. **Propose a regression threshold** for at least one named metric
+     whose justification cites a descriptive statistic from your eval
+     run (median, percentile, or range).
+  4. **State the action triggered on violation** (re-run, rollback,
+     investigate the most recent retrieval change, etc.).
 - **How to verify**:
   ```bash
   make eval
@@ -435,7 +460,8 @@ For each deliverable, the format is:
   distribution rather than a round number, and states what a
   violation triggers. Substitute your own metric and your own
   numbers.
-- **Rubric**: §5 Automated Evaluation Suite.
+- **Rubric**: §5 Automated evaluation suite with a data-driven
+  regression threshold.
 
 ### Task 6 — Input and Output Guardrails (~1.25 hours)
 
@@ -525,25 +551,42 @@ To explore the comparison yourself:
   with one trace expanded showing per-step latencies, **or** the
   markdown output of `make show-traces` showing the same trace data.
   Include in your writeup.
-- **Rubric**: §7 Distributed Tracing.
+- **Rubric**: §7 Distributed tracing of the request pipeline.
 
-### Task 8 — Cost Monitoring Dashboard (~15 min)
+### Task 8 — Cost Monitoring, Per-Tier Summary, and Savings Analysis (~30 min)
+
+This task collapses cost dashboard + savings analysis into one
+deliverable. Three sub-parts, all required:
 
 - **What the starter ships**: `data/cost_log.jsonl` is appended on
   every request. `GET /cost-dashboard` renders the totals as HTML.
-- **Your task**: Get **≥50 entries** into `data/cost_log.jsonl`, open
-  `/cost-dashboard`, and screenshot it. Summarize cost by tier: how
-  many queries hit each model and what was the per-query cost
-  difference?
-- **Recommended path** (≈30 sec, $0): `make seed-cost-log` writes 50
-  realistic synthetic entries with the correct schema and a 70/20/10
-  simple/complex/judge mix. Idempotent — re-runs no-op if the log
-  already has ≥50 rows. Real entries from any subsequent `/query`
-  calls are appended on top, so this is purely additive.
+  `scripts/cost_report.py` reads the same log, computes what each
+  request would have cost on a single-model baseline (default
+  `gpt-4o`), and reports absolute + percentage savings plus a
+  per-tier breakdown.
+- **Your task**:
+  1. **Dashboard + log excerpt.** Get **≥50 entries** into
+     `data/cost_log.jsonl`, open `/cost-dashboard`, and screenshot
+     it. Paste a 5-line excerpt from `cost_log.jsonl` into the
+     writeup to show the entry shape.
+  2. **Per-tier summary.** Name, for each model tier present in the
+     log, the **number of queries** that hit it and the **average
+     per-query cost in dollars**. `make cost-report` prints this
+     table; copy it into the writeup. (Missing the query count or
+     per-query average for any visible tier fails the rubric row.)
+  3. **Savings vs. baseline.** Run `make cost-report` and capture
+     the absolute and percentage savings, **explicitly naming the
+     baseline model** (the cost report prints it on the
+     `Baseline (<model>): ...` line — copy it verbatim).
+- **Recommended path to seed the log** (≈30 sec, $0):
+  `make seed-cost-log` writes 50 realistic synthetic entries with
+  the correct schema and a 70/20/10 simple/complex/judge mix.
+  Idempotent — re-runs no-op if the log already has ≥50 rows. Real
+  entries from any subsequent `/query` calls are appended on top, so
+  this is purely additive.
 - **Or do it for real**: run a 50-query bash loop against `/query`.
   Costs ~$0.10 in API spend and takes a few minutes wall-clock.
   ```bash
-  # The "real" path — both satisfy §8.
   for i in $(seq 1 50); do
     curl -X POST http://localhost:8080/query \
       -H 'Content-Type: application/json' \
@@ -554,26 +597,48 @@ To explore the comparison yourself:
   ```bash
   wc -l data/cost_log.jsonl                  # ≥50
   open http://localhost:8080/cost-dashboard  # macOS — or curl + screenshot
+  make cost-report                            # prints per-tier table + savings
   ```
-- **Rubric**: §8 Cost Monitoring Dashboard.
+- **Rubric**: §8 Cost monitoring, per-tier summary, and savings vs.
+  a single-model baseline.
 
-### Task 9 — Cost Savings Analysis (~15 min)
+### Task 9 — Documented, Reproducible Submission (~30 min)
 
-- **What the starter ships**: `scripts/cost_report.py` reads the cost
-  log, computes what each request would have cost on a single-model
-  baseline (default `gpt-4o`), and reports absolute + percentage
-  savings.
-- **Your task**: Using the same 50-query log from Task 8, run
-  `cost_report.py`. Report the absolute and percentage savings.
-  **Stand-out**: project monthly cost at a higher request volume
-  (e.g., 10,000 queries/day) and discuss what would change at scale.
+This is the "is the writeup actually shippable?" check. It's the
+last row in the rubric and the one reviewers verify last.
+
+- **Your task**:
+  1. **WRITEUP.md exists** at the project root with a section for
+     each of the 9 required deliverables in numeric order, each
+     containing a summary paragraph and the evidence named in the
+     matching rubric row (curls, screenshots, metric tables, log
+     excerpts).
+  2. **Tests pass cleanly**: capture the tail of `make test` in the
+     writeup showing **≥195 tests passing** and the tail of
+     `make verify` showing **0 failed** checks.
+  3. **No secrets committed**: `.env` is not tracked; no API keys
+     anywhere in committed files. (A real Vocareum or OpenAI key in
+     the repo is an instant fail — the reviewer will ask you to
+     rotate it.)
 - **How to verify**:
   ```bash
-  make cost-report
+  make test       # tail should read "≥195 passed"
+  make verify     # 0 failed
+  git ls-files | grep -E '(^|/)\.env$'   # empty
   ```
-- **Rubric**: §9 Cost Savings Analysis (Tiered vs. Baseline).
+- **Rubric**: §9 Documented implementation, evidence, and
+  reproducible repository.
 
-### Bonus Task 10 — Semantic Cache
+## Stand-out Suggestions
+
+These are not separately graded — every required row is in §1–§9 —
+but a submission that picks one or two up and writes them up reads
+as a stand-out project. See [rubric §
+Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) for
+the full list (including a third routing tier and a cost projection
+at scale).
+
+### Stand-out: Semantic Cache
 
 - **What the starter ships**: A Chroma-backed semantic cache wired
   into the default HTTP route. Cache lookup and store are part of the
@@ -604,9 +669,10 @@ To explore the comparison yourself:
   overlap more than synonym substitution.
 - **How to verify**: Six curl outputs (three with `cached: true`) and
   the cache-inspection output above showing the stored questions.
-- **Rubric**: §10 Semantic Cache.
+- **Rubric**: not separately graded — see [Suggestions to Stand
+  Out](rubric.md#suggestions-to-stand-out).
 
-### Bonus Task 11 — Latency Optimization via Streaming
+### Stand-out: Streaming/TTFT
 
 - **What the starter ships**: `POST /query/stream` streams Server-Sent
   Events. `compare_ttft` in `src/optimization/streaming.py`
@@ -629,7 +695,8 @@ To explore the comparison yourself:
       print(q, compare_ttft(q))
   '
   ```
-- **Rubric**: §11 Latency Optimization via Streaming.
+- **Rubric**: not separately graded — see [Suggestions to Stand
+  Out](rubric.md#suggestions-to-stand-out).
 
 ## 7. Submission Requirements
 
@@ -670,8 +737,9 @@ item should be true:
       ingestion through `data/inbox/` (Deliverable 1).
 - [ ] All 9 required rubric rows have evidence in `WRITEUP.md`
       (curl outputs, screenshots, log excerpts, metric tables).
-- [ ] If you attempted a bonus deliverable (10 or 11), its evidence is
-      in `WRITEUP.md` too.
+- [ ] If you attempted any stand-out work (semantic cache, streaming
+      TTFT, third routing tier, cost projection at scale), its
+      evidence is in `WRITEUP.md` too.
 - [ ] Branch name and commit SHA are listed in your submission notes
       so the reviewer knows exactly what to clone.
 
