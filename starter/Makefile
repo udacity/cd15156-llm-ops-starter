@@ -1,4 +1,4 @@
-.PHONY: help setup serve serve-proxy watch eval load-data install-guardrails-models verify test show-traces tune-factuality eval-llm-judge demo-guardrails seed-cost-log seed-traces eval-topk-sweep harvest-evidence cost-report
+.PHONY: help setup serve serve-proxy watch eval load-data install-guardrails-models verify test show-traces tune-factuality eval-llm-judge seed-cost-log seed-traces eval-topk-sweep harvest-evidence cost-report
 
 # Make `src` importable for scripts run via `uv run python scripts/...`.
 # (Pytest gets this from `pythonpath = ["."]` in pyproject.toml; scripts don't.)
@@ -90,9 +90,6 @@ tune-factuality: ## Empirically tune the FactualConsistency threshold against th
 
 eval-llm-judge: ## Calibrate the LLM-judge hallucination scanner against the golden + negative cohorts
 	uv run python scripts/eval_llm_judge.py
-
-demo-guardrails: ## Run paired curls for every pattern in INJECTION_PATTERNS + PII_PATTERNS (requires `make serve`)
-	uv run python scripts/demo_guardrails.py
 
 seed-cost-log: ## Seed data/cost_log.jsonl with 50 realistic synthetic entries (idempotent, $0)
 	uv run python scripts/seed_cost_log.py
