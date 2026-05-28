@@ -62,7 +62,6 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
 
     # Application
-    confidence_threshold: float = 0.7
     cost_log_path: str = "data/cost_log.jsonl"
 
     # Guardrails — output-side

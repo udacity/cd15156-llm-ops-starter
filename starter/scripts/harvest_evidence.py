@@ -189,16 +189,15 @@ def section_5_eval_threshold() -> str:
 
 
 def section_6_guardrails() -> str:
-    out = subprocess.run(
-        ["uv", "run", "python", "scripts/demo_guardrails.py"],
-        cwd=STARTER_ROOT, capture_output=True, text=True, check=False,
+    return (
+        "<!-- TODO: learner — Task 6 asks you to add ≥3 new injection "
+        "patterns to `INJECTION_PATTERNS` in `src/guardrails/input_guards.py` "
+        "(or one new sensitive-data type to `PII_PATTERNS` + "
+        "`PII_REDACTIONS`). For each new pattern, paste two `POST /query` "
+        "outputs: one whose response sets `blocked_by` to your new pattern, "
+        "and one legitimate question whose response has `blocked_by: null`. "
+        "See INSTRUCTIONS.md Task 6 for the curl shape. -->"
     )
-    if out.returncode != 0:
-        return (
-            f"_(REQ-022 demo-guardrails failed — run manually per INSTRUCTIONS Task 6.)_\n\n"
-            f"```\n{out.stderr.strip()[-500:]}\n```"
-        )
-    return out.stdout.strip()
 
 
 def section_7_tracing() -> str:

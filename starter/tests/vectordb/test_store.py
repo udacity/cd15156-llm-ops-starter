@@ -23,7 +23,9 @@ def test_get_collection_returns_or_creates_named_collection():
 
         result = get_collection("products")
 
-    client.get_or_create_collection.assert_called_once_with("products")
+    client.get_or_create_collection.assert_called_once_with(
+        "products", metadata={"hnsw:space": "cosine"}
+    )
     assert result is fake_col
 
 
@@ -67,6 +69,26 @@ def test_query_converts_distances_to_similarity_scores():
     assert result[0].chunk_text == "chunk one"
     assert result[0].similarity_score == 0.9
     assert result[1].similarity_score == 0.7
+
+
+def test_query_clamps_similarity_score_at_zero():
+    # A distance > 1.0 (possible if a collection was created with an L2 space
+    # instead of cosine, or if upstream weirdness produces it) would make the
+    # naive ``1 - distance`` go negative. The clamp keeps ``similarity_score``
+    # in ``[0, 1]`` so downstream "confidence" stays a meaningful number.
+    with patch("src.vectordb.store._client") as client:
+        fake_col = MagicMock()
+        fake_col.query.return_value = _query_results(
+            ids=["p1", "p2"],
+            docs=["chunk one", "chunk two"],
+            distances=[0.4, 1.7],
+        )
+        client.get_or_create_collection.return_value = fake_col
+
+        result = query([0.5, 0.5], n_results=2)
+
+    assert result[0].similarity_score == 0.6
+    assert result[1].similarity_score == 0.0
 
 
 def test_delete_calls_collection_delete():
