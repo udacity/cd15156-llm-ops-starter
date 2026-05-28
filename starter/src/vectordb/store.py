@@ -44,8 +44,17 @@ _client = chromadb.PersistentClient(
 
 
 def get_collection(name: str = "products") -> chromadb.Collection:
-    """Get or create a Chroma collection by name."""
-    return _client.get_or_create_collection(name)
+    """Get or create a Chroma collection by name.
+
+    ``hnsw:space=cosine`` is load-bearing: OpenAI's ``text-embedding-3-small``
+    returns unit-normalized vectors, and Chroma's default L2 space makes the
+    ``similarity_score = 1 - distance`` convention return values outside
+    ``[0, 1]``. The cache collection in ``src/cache/semantic.py`` pins the
+    same metric for the same reason. Note that the metadata is only applied
+    on collection creation; an existing L2-indexed directory must be deleted
+    and re-loaded for the pin to take effect.
+    """
+    return _client.get_or_create_collection(name, metadata={"hnsw:space": "cosine"})
 
 
 def add(
@@ -74,7 +83,11 @@ def query(query_embedding: list[float], n_results: int = 5) -> list[Source]:
         results["ids"][0], results["documents"][0], results["distances"][0]
     ):
         sources.append(
-            Source(doc_id=doc_id, chunk_text=text, similarity_score=1 - distance)
+            Source(
+                doc_id=doc_id,
+                chunk_text=text,
+                similarity_score=max(0.0, 1.0 - distance),
+            )
         )
     return sources
 
