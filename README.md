@@ -130,6 +130,31 @@ project/
 
 ---
 
+## How to Extend Each Layer
+
+| If you want to… | Edit | Notes |
+|---|---|---|
+| Add a new product to the seed corpus | `data/products/*.json` then `make load-data` | Fields required: `product_id`, `name`, `category`, `brand`, `price`, `description`, `specifications` (object), `care_instructions`. |
+| Auto-ingest products at runtime | Drop a JSON in `data/inbox/` while `make watch` is running | Malformed files move to `data/inbox/failed/<name>.error.txt`. Files over 256 KB are rejected. |
+| Add a new LLM and price | `src/pricing.py::MODEL_PRICING` then refer to it from `.env` (`MODEL_COMPLEX` / `MODEL_SIMPLE`) | Pricing is USD per 1M tokens, `(input_price, output_price)`. |
+| Tune the simple/complex routing prompt | `prompts/classifier.j2` | Returns JSON `{"classification": "simple"\|"complex"}`. Bad JSON falls through to `complex` (the safe-but-pricier default). |
+| Block a new prompt-injection pattern | `src/guardrails/input_guards.py::INJECTION_PATTERNS` | Append a `re.compile(...)`. The handler short-circuits to `_safe_response` on first match. |
+| Add a new PII type | `src/guardrails/input_guards.py::PII_PATTERNS` and `PII_REDACTIONS` | The redacted question flows to LLM, cache, and traces — not the raw value. |
+| Use ML-backed guards instead of regex | Swap imports in `src/gateway/routes.py` from `src.guardrails.input_guards` to `src.guardrails.llm_guard.input_guards` | First scan downloads ~400 MB of HuggingFace models; cache them with `make install-guardrails-models`. |
+| Tune cache similarity threshold | `src/cache/semantic.py::lookup` `threshold` arg, called from `routes.py` (default 0.95) | Lower threshold = more hits, more risk of returning a wrong-but-similar cached answer. |
+| Adjust cache TTL | `src/cache/semantic.py::store` `ttl_s` arg (default 3600s) | Set to 0 to never expire. |
+| Add a new hallucination check | `src/guardrails/output_guards.py::check_hallucination` | Output guards run after `route_query` and before `cache_store`. A flagged response never enters the cache. |
+| Customize the system prompt | `prompts/rag_system.j2` | The `{{ contexts }}` placeholder is wrapped in `<<<BEGIN_CONTEXT>>>` markers — see the section below for why. |
+| Add a new RAGAS metric | `src/evaluation/run_eval.py::DEFAULT_METRICS` | Pin RAGAS releases (`ragas==0.4.3`); 0.x patches break occasionally. |
+
+---
+
+## Prompt-Injection Hardening (`prompts/rag_system.j2`)
+
+The retrieved context is wrapped between `<<<BEGIN_CONTEXT>>>` and `<<<END_CONTEXT>>>` markers, with an explicit instruction to the model that anything inside the markers is treated as data, never as commands. This protects against indirect prompt injection — a poisoned product description that tries to redirect the model. The pattern is the canonical mitigation for OWASP LLM01 (Prompt Injection) when retrieved content is mixed with system instructions in the same prompt.
+
+If you remove the markers or relocate the instruction, run the security review test suite to confirm no regressions: `pytest tests/gateway/test_routes.py -v`.
+
 ## Glossary
 
 A few terms used in source comments that aren't course terminology:
