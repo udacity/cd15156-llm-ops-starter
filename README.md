@@ -83,76 +83,6 @@ You should see a JSON `QueryResponse` with `answer`, retrieved `sources`, `confi
 
 External services: **OpenAI** (chat + embeddings). Everything else runs in-process: **Chroma** (vector DB and semantic cache, embedded `PersistentClient` writing to `data/chroma/`) and **Arize Phoenix** (tracing UI at http://localhost:6006). `TRACING_BACKEND=none` disables tracing for tests/CI. **No Docker required** at any layer. If port 6006 isn't reachable in your workspace, `make show-traces` exports the same trace data as markdown.
 
----
-
-## Where Each Course Module Lives
-
-The capstone covers the implementation modules of Course 2 in order. Each row is the implementation module title from the curriculum, the source package that implements it, and a one-line summary.
-
-| Course module | Source path | What it does |
-|---|---|---|
-| Implement a Prompt Versioning System with Git and Jinja2 | `prompts/` (`rag_system.j2`, `classifier.j2`) | Jinja2 templates kept under git; rendered by `src/rag/generator.py` and `src/gateway/classifier.py`. |
-| Configure a Vector Database with Chroma | `src/vectordb/` | Chroma HTTP client (`store.py`), OpenAI embeddings (`embedder.py`), product chunker (`chunker.py`). |
-| Operationalize a Basic RAG Pipeline | `src/rag/` | Three small modules: `retriever.py` (top-k from Chroma), `generator.py` (chat completion with retrieved context), `pipeline.py` (compose the two). |
-| Implement LLM Call Tracing | `src/tracing/` | `traced_pipeline` decorator that wraps `run_pipeline`. Phoenix runs in-process via OpenInference + OpenTelemetry. `TRACING_BACKEND=none` disables tracing for tests/CI. `scripts/show_traces.py` exports trace data as markdown for environments without port 6006. |
-| Build an Automated Evaluation Suite with RAGAS | `src/evaluation/`, `data/golden_test_set.csv` | RAGAS over a golden CSV (~30 rows) with the four stable metrics. |
-| Build a Token Usage and Cost Monitoring System | `src/cost/` | Append-only JSONL log of per-request cost (`tracker.py`); `GET /cost-dashboard` HTML report (`dashboard.py`). |
-| Implement Semantic Caching with a Vector Store | `src/cache/` | A separate `cache` collection on the same Chroma `PersistentClient` as the document corpus, keyed on the query embedding. Per-entry TTL is enforced lazily on lookup. `wrapper.py` exposes `cached_route_query`; the production path is composed inline in `src/gateway/routes.py`. |
-| Build an LLM Gateway with FastAPI | `src/gateway/` | The HTTP surface plus tiered routing (`classifier.py` → simple/complex → `gpt-4o-mini`/`gpt-4o`). |
-| Implement Input/Output Guardrails | `src/guardrails/` | Two implementations side-by-side: regex-based (`input_guards.py`, `output_guards.py`, `wrapper.py`) and ML-backed via LLM Guard (`llm_guard/`). |
-| Automate the RAG Data Pipeline | `src/ingestion/` | `watchdog`-based file watcher in place of the cloud Lambda+S3 design. Drop a JSON in `data/inbox/`, see it appear in Chroma. |
-| Optimize End-to-End RAG Latency | `src/optimization/` | Streaming chat completions (`streaming.py`), SSE endpoint at `POST /query/stream` (`routes.py`), TTFT measurement helpers. |
-
-The dependency graph between these packages is enforced as a fitness function in `tests/integration/test_dependency_graph.py`. Higher-numbered packages may import from lower-numbered ones; any reverse edge has to be listed as a documented exception with a back-reference.
-
-The shared infrastructure lives at the package root and has no module association: `src/config.py` (settings), `src/models.py` (Pydantic types every package uses), `src/pricing.py` (model→USD lookup).
-
----
-
-## How to Extend Each Layer
-
-| If you want to… | Edit | Notes |
-|---|---|---|
-| Add a new product to the seed corpus | `data/products/*.json` then `make load-data` | Fields required: `product_id`, `name`, `category`, `brand`, `price`, `description`, `specifications` (object), `care_instructions`. |
-| Auto-ingest products at runtime | Drop a JSON in `data/inbox/` while `make watch` is running | Malformed files move to `data/inbox/failed/<name>.error.txt`. Files over 256 KB are rejected. |
-| Add a new LLM and price | `src/pricing.py::MODEL_PRICING` then refer to it from `.env` (`MODEL_COMPLEX` / `MODEL_SIMPLE`) | Pricing is USD per 1M tokens, `(input_price, output_price)`. |
-| Tune the simple/complex routing prompt | `prompts/classifier.j2` | Returns JSON `{"classification": "simple"\|"complex"}`. Bad JSON falls through to `complex` (the safe-but-pricier default). |
-| Block a new prompt-injection pattern | `src/guardrails/input_guards.py::INJECTION_PATTERNS` | Append a `re.compile(...)`. The handler short-circuits to `_safe_response` on first match. |
-| Add a new PII type | `src/guardrails/input_guards.py::PII_PATTERNS` and `PII_REDACTIONS` | The redacted question flows to LLM, cache, and traces — not the raw value. |
-| Use ML-backed guards instead of regex | Swap imports in `src/gateway/routes.py` from `src.guardrails.input_guards` to `src.guardrails.llm_guard.input_guards` | First scan downloads ~400 MB of HuggingFace models; cache them with `make install-guardrails-models`. |
-| Tune cache similarity threshold | `src/cache/semantic.py::lookup` `threshold` arg, called from `routes.py` (default 0.95) | Lower threshold = more hits, more risk of returning a wrong-but-similar cached answer. |
-| Adjust cache TTL | `src/cache/semantic.py::store` `ttl_s` arg (default 3600s) | Set to 0 to never expire. |
-| Add a new hallucination check | `src/guardrails/output_guards.py::check_hallucination` | Output guards run after `route_query` and before `cache_store`. A flagged response never enters the cache. |
-| Customize the system prompt | `prompts/rag_system.j2` | The `{{ contexts }}` placeholder is wrapped in `<<<BEGIN_CONTEXT>>>` markers — see the section below for why. |
-| Add a new RAGAS metric | `src/evaluation/run_eval.py::DEFAULT_METRICS` | Pin RAGAS releases (`ragas==0.4.3`); 0.x patches break occasionally. |
-
----
-
-## Prompt-Injection Hardening (`prompts/rag_system.j2`)
-
-The retrieved context is wrapped between `<<<BEGIN_CONTEXT>>>` and `<<<END_CONTEXT>>>` markers, with an explicit instruction to the model that anything inside the markers is treated as data, never as commands. This protects against indirect prompt injection — a poisoned product description that tries to redirect the model. The pattern is the canonical mitigation for OWASP LLM01 (Prompt Injection) when retrieved content is mixed with system instructions in the same prompt.
-
-If you remove the markers or relocate the instruction, run the security review test suite to confirm no regressions: `pytest tests/gateway/test_routes.py -v`.
-
----
-
-## Production Caveats — Read Before Deploying
-
-This starter is designed to run on a single learner's local machine. **Do not deploy it to a shared or internet-reachable host as-is.** The following are deliberately omitted or relaxed for pedagogy, and need to be added before production use:
-
-| Omitted | Where to learn | What to add before deploying |
-|---|---|---|
-| Authentication / authorization on `POST /query`, `POST /query/stream`, `GET /cost-dashboard` | Out of scope for this course | API-key header, OAuth, or reverse proxy with auth |
-| Rate limiting | Gateway module exercises | `slowapi` / `fastapi-limiter`, or a WAF |
-| Per-user or per-IP cost ceiling | Gateway module exercises | Custom middleware that reads the cost log before routing |
-| Output guards on streaming tokens | Optimization module exercises | NLI / banned-topics on accumulated answer; cancel stream on violation |
-| TLS for outbound OpenAI traffic | Out of scope | The starter speaks HTTPS to OpenAI by default. |
-| Dependency CVE scanning | Out of scope | `pip-audit` / `bandit` / `semgrep` in CI. |
-
-The starter has no inbound services beyond FastAPI and the embedded Phoenix UI (port 6006). Both bind to localhost by default; if you change `phoenix_host` to `0.0.0.0`, put it behind an authenticating reverse proxy.
-
----
-
 ## Layout
 
 ```
@@ -233,9 +163,3 @@ A couple of pins in `pyproject.toml` are non-obvious and worth flagging:
   `embeddings.create`, `stream_options`, `response_format`) is stable
   across both majors. The resolver currently lands on openai 1.109
   because llm-guard's `tiktoken` dep transitively pulls it that way.
-
----
-
-## Where to Find Course Materials
-
-The capstone module dictionary, scope, and proposal docs live in the course's content repo (separate from this reviewer-toolkit repo). None of those are needed to run the starter; they are ground truth for the curriculum design.
