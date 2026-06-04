@@ -1,16 +1,12 @@
 # Project Instructions: Production LLM FAQ Service
 
-> Estimated time: 6–8 hours · Difficulty: Advanced · Workspace: local
-> (provided GCP container or your own laptop — no Docker required)
-
 This is the capstone project for the LLM Ops course. You will operate
 and extend a production-style RAG service across the full LLM Ops stack:
 retrieval, prompt engineering, tiered model routing, evaluation,
 guardrails, distributed tracing, cost monitoring, ingestion automation,
 and (bonus) caching and streaming.
 
-When you are graded, every deliverable below maps to a specific row in
-[`rubric.md`](rubric.md). Read the rubric alongside these instructions —
+Read the rubric in the Classroom alongside these instructions —
 the rubric tells you exactly what evidence to produce.
 
 ## Contents
@@ -23,7 +19,6 @@ the rubric tells you exactly what evidence to produce.
 - [§6. Your Tasks](#6-your-tasks)
 - [§7. Submission Requirements](#7-submission-requirements)
 - [§8. Hints and Common Pitfalls](#8-hints-and-common-pitfalls)
-- [§9. Where to Get Help](#9-where-to-get-help)
 
 ---
 
@@ -55,47 +50,29 @@ a specific, graded way. A handful of optional stand-out ideas
 scale) are listed at the end — they aren't separately graded but make
 for a stronger submission.
 
-Track your progress against this list. Each item links to the task
-in §6 and the matching rubric row.
+Track your progress against this list.
 
 **Required (1–9):**
 
-- [ ] 1. Vector store populated with chunked, embedded products — [Task 1](#task-1--populate-the-vector-database-30-min) · [Rubric §1](rubric.md#1-vector-store-populated-with-chunked-embedded-product-documents)
-- [ ] 2. RAG pipeline with structured JSON output **and** a `top_k` sweep — [Task 2](#task-2--rag-pipeline-with-structured-output-45-min) · [Rubric §2](rubric.md#2-rag-pipeline-with-structured-output-and-a-tuned-retrieval-depth)
-- [ ] 3. Tiered model routing via the LLM gateway — [Task 3](#task-3--llm-gateway-with-tiered-routing-20-min) · [Rubric §3](rubric.md#3-tiered-model-routing-via-the-llm-gateway)
-- [ ] 4. Automated data ingestion + quarantine — [Task 4](#task-4--automated-data-ingestion-20-min) · [Rubric §4](rubric.md#4-automated-data-ingestion-with-quarantine-for-malformed-inputs)
-- [ ] 5. Automated evaluation suite (RAGAS) with a data-driven threshold — [Task 5](#task-5--automated-evaluation-suite-45-min) · [Rubric §5](rubric.md#5-automated-evaluation-suite-with-a-data-driven-regression-threshold)
-- [ ] 6. Input and output guardrails — [Task 6](#task-6--input-and-output-guardrails-125-hours) · [Rubric §6](rubric.md#6-input-and-output-guardrails)
-- [ ] 7. Distributed tracing (Phoenix) — [Task 7](#task-7--distributed-tracing-20-min) · [Rubric §7](rubric.md#7-distributed-tracing-of-the-request-pipeline)
-- [ ] 8. Cost monitoring, per-tier summary, and savings vs. baseline — [Task 8](#task-8--cost-monitoring-per-tier-summary-and-savings-analysis-30-min) · [Rubric §8](rubric.md#8-cost-monitoring-per-tier-summary-and-savings-vs-a-single-model-baseline)
-- [ ] 9. Documented, reproducible submission — [Task 9](#task-9--documented-reproducible-submission-30-min) · [Rubric §9](rubric.md#9-documented-implementation-evidence-and-reproducible-repository)
+- [ ] 1. Vector store populated with chunked, embedded products — [Task 1](#task-1--populate-the-vector-database-30-min) 
+- [ ] 2. RAG pipeline with structured JSON output **and** a `top_k` sweep — [Task 2](#task-2--rag-pipeline-with-structured-output-45-min) 
+- [ ] 3. Tiered model routing via the LLM gateway — [Task 3](#task-3--llm-gateway-with-tiered-routing-20-min) 
+- [ ] 4. Automated data ingestion + quarantine — [Task 4](#task-4--automated-data-ingestion-20-min) 
+- [ ] 5. Automated evaluation suite (RAGAS) with a data-driven threshold — [Task 5](#task-5--automated-evaluation-suite-45-min) 
+- [ ] 6. Input and output guardrails — [Task 6](#task-6--input-and-output-guardrails-125-hours) 
+- [ ] 7. Distributed tracing (Phoenix) — [Task 7](#task-7--distributed-tracing-20-min) 
+- [ ] 8. Cost monitoring, per-tier summary, and savings vs. baseline — [Task 8](#task-8--cost-monitoring-per-tier-summary-and-savings-analysis-30-min) 
+- [ ] 9. Documented, reproducible submission — [Task 9](#task-9--documented-reproducible-submission-30-min) 
 
 **Stand-out (optional, not separately graded):**
 
 - [ ] Semantic caching — [Stand-out: Semantic Cache](#stand-out-semantic-cache)
 - [ ] Latency optimization via streaming — [Stand-out: Streaming/TTFT](#stand-out-streamingttft)
-- [ ] A third routing tier — see [Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) in the rubric
-- [ ] Cost projection at scale — see [Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) in the rubric
+- [ ] A third routing tier 
+- [ ] Cost projection at scale
 
 For the architecture and the file map, see
 [`README.md`](README.md).
-
-### Substitutions from the proposal
-
-The course proposal mentioned a few specific tools that were swapped
-during the build for workspace-pragmatism and reliability reasons.
-The deliverables are unchanged; only the implementation differs:
-
-| Proposal mentioned | Starter actually uses | Why |
-|--------------------|------------------------|-----|
-| Redis Stack (Docker) | Chroma `cache` collection (in-process) | Removes Docker requirement on the workspace |
-| Langfuse Cloud (free tier) | Arize Phoenix in-process at :6006 | No external account/quota; works offline |
-| Guardrails AI | LLM Guard + a custom LLM-judge scanner | Hub install fragility; visible local validators preferred. |
-
-You'll see these substitutions reflected in the starter code, the
-rubric, and your `WRITEUP.md`. If you want to swap back to the
-proposal's stack in your own deployment, the architecture supports it
-— but the rubric grades against the as-shipped starter.
 
 ## 3. Prerequisites Check
 
@@ -120,8 +97,6 @@ Before you start:
   inside the FastAPI process — no signup, no Docker, no cloud account
   required. The Phoenix UI is served at http://localhost:6006 once
   `make serve` is up.
-- [ ] You have completed **nd907 Course 1 (MLOps)** or have equivalent
-  background in deploying, monitoring, and maintaining ML systems.
 
 ## 4. Workspace Setup
 
@@ -261,7 +236,7 @@ teaches is wired in. Your job is not to rebuild it — your job is to
 **operate, extend, and reason about** it the way an LLM Ops engineer
 would on day one in a new role.
 
-Read the architecture diagram and the module-to-source-path map in
+Read the architecture diagram in
 [`README.md`](README.md) before you start the tasks
 below. Pay particular attention to the **How to Extend Each Layer**
 table — it tells you exactly which file to edit for the most common
@@ -282,7 +257,6 @@ For each deliverable, the format is:
 - **What the starter ships**: what's already there.
 - **Your task**: the graded work.
 - **How to verify**: commands or checks to confirm your work is done.
-- **Rubric**: cross-reference to [`rubric.md`](rubric.md).
 
 ### Task 1 — Populate the Vector Database (~30 min)
 
@@ -306,7 +280,6 @@ For each deliverable, the format is:
     -d '{"question": "TODO: a question only a new product can answer"}'
   # The response.sources should include your new product's doc_id.
   ```
-- **Rubric**: §1 Vector Database Populated.
 
 ### Task 2 — RAG Pipeline With Structured Output (~45 min)
 
@@ -333,10 +306,6 @@ For each deliverable, the format is:
   scratch script — `top_k` is a parameter on both
   `evaluate_pipeline` and `build_eval_dataset` and threads through
   `run_pipeline`.
-- **Rubric**: §2 RAG pipeline with structured output and a tuned
-  retrieval depth. The sweep is part of the pass threshold — a
-  sweep table missing or covering fewer than three `top_k` values
-  fails the row.
 
 ### Task 3 — LLM Gateway With Tiered Routing (~20 min)
 
@@ -383,7 +352,6 @@ For each deliverable, the format is:
   not hallucinate) or substitute a different borderline question.
   Note the `blocked_by` value in your §6 evidence; it's a free signal
   that the hallucination guard works end-to-end.
-- **Rubric**: §3 LLM Gateway With Tiered Routing.
 
 ### Task 4 — Automated Data Ingestion (~20 min)
 
@@ -418,7 +386,6 @@ For each deliverable, the format is:
     -H 'Content-Type: application/json' \
     -d '{"question": "(question targeting the new product)"}'
   ```
-- **Rubric**: §4 Automated Data Ingestion (File Watcher).
 
 ### Task 5 — Automated Evaluation Suite (~45 min)
 
@@ -460,8 +427,6 @@ For each deliverable, the format is:
   distribution rather than a round number, and states what a
   violation triggers. Substitute your own metric and your own
   numbers.
-- **Rubric**: §5 Automated evaluation suite with a data-driven
-  regression threshold.
 
 ### Task 6 — Input and Output Guardrails (~1.25 hours)
 
@@ -497,7 +462,6 @@ For each deliverable, the format is:
     -H 'Content-Type: application/json' \
     -d '{"question": "What paddle is good for beginners?"}' | jq .blocked_by
   ```
-- **Rubric**: §6 Input and Output Guardrails.
 
 #### Hallucination detection
 
@@ -551,7 +515,6 @@ To explore the comparison yourself:
   with one trace expanded showing per-step latencies, **or** the
   markdown output of `make show-traces` showing the same trace data.
   Include in your writeup.
-- **Rubric**: §7 Distributed tracing of the request pipeline.
 
 ### Task 8 — Cost Monitoring, Per-Tier Summary, and Savings Analysis (~30 min)
 
@@ -599,24 +562,20 @@ deliverable. Three sub-parts, all required:
   open http://localhost:8080/cost-dashboard  # macOS — or curl + screenshot
   make cost-report                            # prints per-tier table + savings
   ```
-- **Rubric**: §8 Cost monitoring, per-tier summary, and savings vs.
-  a single-model baseline.
 
 ### Task 9 — Documented, Reproducible Submission (~30 min)
 
-This is the "is the writeup actually shippable?" check. It's the
-last row in the rubric and the one reviewers verify last.
+This is the "is the writeup actually shippable?" check.
 
 - **Your task**:
   1. **WRITEUP.md exists** at the project root with a section for
      each of the 9 required deliverables in numeric order, each
-     containing a summary paragraph and the evidence named in the
-     matching rubric row (curls, screenshots, metric tables, log
-     excerpts).
-  2. **Tests pass cleanly**: capture the tail of `make test` in the
+     containing a summary paragraph and the required evidence
+     (curls, screenshots, metric tables, log excerpts).
+  3. **Tests pass cleanly**: capture the tail of `make test` in the
      writeup showing **≥195 tests passing** and the tail of
      `make verify` showing **0 failed** checks.
-  3. **No secrets committed**: `.env` is not tracked; no API keys
+  4. **No secrets committed**: `.env` is not tracked; no API keys
      anywhere in committed files. (A real Vocareum or OpenAI key in
      the repo is an instant fail — the reviewer will ask you to
      rotate it.)
@@ -626,17 +585,12 @@ last row in the rubric and the one reviewers verify last.
   make verify     # 0 failed
   git ls-files | grep -E '(^|/)\.env$'   # empty
   ```
-- **Rubric**: §9 Documented implementation, evidence, and
-  reproducible repository.
 
 ## Stand-out Suggestions
 
-These are not separately graded — every required row is in §1–§9 —
+These are not separately graded,
 but a submission that picks one or two up and writes them up reads
-as a stand-out project. See [rubric §
-Suggestions to Stand Out](rubric.md#suggestions-to-stand-out) for
-the full list (including a third routing tier and a cost projection
-at scale).
+as a stand-out project.
 
 ### Stand-out: Semantic Cache
 
@@ -669,8 +623,6 @@ at scale).
   overlap more than synonym substitution.
 - **How to verify**: Six curl outputs (three with `cached: true`) and
   the cache-inspection output above showing the stored questions.
-- **Rubric**: not separately graded — see [Suggestions to Stand
-  Out](rubric.md#suggestions-to-stand-out).
 
 ### Stand-out: Streaming/TTFT
 
@@ -695,8 +647,6 @@ at scale).
       print(q, compare_ttft(q))
   '
   ```
-- **Rubric**: not separately graded — see [Suggestions to Stand
-  Out](rubric.md#suggestions-to-stand-out).
 
 ## 7. Submission Requirements
 
@@ -735,7 +685,7 @@ item should be true:
       summarized (don't ship tens of MB of synthetic logs).
 - [ ] At least 5 new product JSONs in `data/products/` *or* documented
       ingestion through `data/inbox/` (Deliverable 1).
-- [ ] All 9 required rubric rows have evidence in `WRITEUP.md`
+- [ ] All required steps have evidence in `WRITEUP.md`
       (curl outputs, screenshots, log excerpts, metric tables).
 - [ ] If you attempted any stand-out work (semantic cache, streaming
       TTFT, third routing tier, cost projection at scale), its
@@ -745,10 +695,6 @@ item should be true:
 
 ## 8. Hints and Common Pitfalls
 
-- **Phoenix dashboard isn't reachable in your browser.** Some learner
-  workspaces don't expose port 6006. You can still satisfy rubric §7:
-  run `make show-traces` to get the same trace data as a markdown
-  export. Include the markdown in your writeup instead of a screenshot.
 - **Phoenix UI shows "no traces" or an empty `default` project.** The
   app registers spans under the **`llm-ops-capstone`** project, not
   `default`. Use the project picker in the top-left of the Phoenix
@@ -818,23 +764,6 @@ item should be true:
 - **Forward-dependency rule.** Don't add an `import` from a "later"
   package to an "earlier" one. The fitness function in
   `tests/integration/test_dependency_graph.py` will fail.
-
-## 9. Where to Get Help
-
-- **Course content** — every layer in the starter is taught in a
-  matching module. The module dictionary lives at the repository root:
-  `references/module-dictionary-C2-SUBMIT.csv`.
-- **Architecture diagram + module map** —
-  [`README.md`](README.md).
-- **Security review** — `docs/security-review/2026-04-24-capstone-ship-readiness.md`
-  at the repository root. Useful when adding guardrails (Task 6).
-- **Library docs**:
-  - Arize Phoenix: https://docs.arize.com/phoenix
-  - RAGAS: https://docs.ragas.io
-  - LLM Guard: https://llm-guard.com/
-  - Chroma: https://docs.trychroma.com/
-- **Stuck on the workspace itself** — open a ticket via the standard
-  course mentor channel.
 
 Good luck. The system is real; the operational concerns are real.
 Treat your writeup like a postmortem for a working production
