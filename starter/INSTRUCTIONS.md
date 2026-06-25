@@ -85,7 +85,7 @@ Before you start:
 - [ ] A **Vocareum API key** (prefix `voc-`). The Vocareum Workspace
   provisions one for you — look for it in your Workspace's environment
   variables or under the course resources panel. The course pre-funds
-  it with a **$10 budget**; you do not need a personal OpenAI account
+  it; you do not need a personal OpenAI account
   or credit card. A clean run through the rubric on the first try will
   spend roughly $2–$5, leaving comfortable room for re-runs. The
   single most expensive command is `make eval-topk-sweep` (~$0.10);
@@ -105,8 +105,8 @@ root:
 
 ```bash
 make setup            # uv sync — installs all deps
-make load-data        # seed the vector DB from data/products/
 cp .env.example .env  # then fill in your keys (see below)
+make load-data        # seed the vector DB from data/products/
 make serve            # FastAPI on http://localhost:8080
 ```
 
@@ -157,47 +157,6 @@ curl -X POST http://localhost:8080/query \
 If you see a `QueryResponse` JSON with `answer`, `sources`,
 `confidence`, `model`, `tokens`, `cost_usd`, and `trace_id`, the stack
 is healthy.
-
-## 5. How the Starter Works
-
-### 5-minute speedrun
-
-If you just want to confirm everything works before reading the rest
-of this section, here is the 8-command path from a fresh clone to a
-live `/query` response. Each step is annotated `[once]` for one-time
-setup or `[repeat]` for things you'll re-run as you work — the next
-subsection explains the difference in detail.
-
-```bash
-# 1. [once] Copy the env template, then add your Vocareum API key.
-cp .env.example .env
-# edit .env — set OPENAI_API_KEY=voc-...
-# (set OPENAI_BASE_URL=https://openai.vocareum.com/v1 too — see §4)
-
-# 2. [once] Install dependencies with uv.
-make setup
-
-# 3. [once, optional] Pre-cache LLM Guard models — ~5 min, ~400 MB.
-make install-guardrails-models
-
-# 4. [once, then repeat after editing data/products/] Build the vector DB.
-make load-data
-
-# 5. [repeat] Start the FastAPI server in this terminal.
-make serve
-
-# 6. [repeat] In ANOTHER terminal, smoke-test /query.
-curl -X POST http://localhost:8080/query \
-  -H 'Content-Type: application/json' \
-  -d '{"question":"What is the weight of the Selkirk AMPED S2?"}'
-
-# 7. [repeat] Run the automated portion of the rubric checklist.
-make verify
-```
-
-If the curl in step 6 returns a JSON `QueryResponse` with a populated
-`answer` and a non-empty `sources` array, you are ready to start the
-graded work in §6.
 
 ### When do I need to re-run something?
 
