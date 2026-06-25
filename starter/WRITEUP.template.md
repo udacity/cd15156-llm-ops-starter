@@ -169,13 +169,13 @@ context_precision: ?.???
 # Pattern X — should fire
 curl -X POST http://localhost:8080/query \
   -H 'Content-Type: application/json' \
-  -d '{"question":"<input that should trigger>"}' | jq .blocked_by
+  -d '{"question":"<input that should trigger>"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
 # Expected: "prompt_injection: ..." or "pii_redacted: ..."
 
 # Pattern X — should NOT fire
 curl -X POST http://localhost:8080/query \
   -H 'Content-Type: application/json' \
-  -d '{"question":"<legitimate question>"}' | jq .blocked_by
+  -d '{"question":"<legitimate question>"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
 # Expected: null
 ```
 
