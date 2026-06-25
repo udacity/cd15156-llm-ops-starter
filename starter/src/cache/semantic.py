@@ -47,6 +47,8 @@ COLLECTION_NAME = "cache"
 KEY_PREFIX = "cache:"
 
 # See note in src/vectordb/store.py — silences chromadb 0.6.x posthog noise.
+import posthog
+posthog.disabled = True  # hard-off: never construct/send chromadb product telemetry
 logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 _client = chromadb.PersistentClient(
     path=settings.chroma_path,

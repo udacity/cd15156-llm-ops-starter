@@ -141,7 +141,7 @@ make serve   # in another terminal, then:
 
 curl -X POST http://localhost:8080/query \
   -H 'Content-Type: application/json' \
-  -d '{"question": "Tell me about <something unambiguous from your new product>"}' | jq .sources
+  -d '{"question": "Tell me about <something unambiguous from your new product>"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['sources'], indent=2))"
 ```
 
 If your new product's `description` text is in the `sources` array,

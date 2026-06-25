@@ -36,6 +36,8 @@ from src.models import Source
 # but a few capture() calls fire before that flag takes effect and crash
 # against posthog 7.x's new signature. Silencing the telemetry logger
 # itself suppresses the resulting stderr spam without changing behavior.
+import posthog
+posthog.disabled = True  # hard-off: never construct/send chromadb product telemetry
 logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 _client = chromadb.PersistentClient(
     path=settings.chroma_path,
