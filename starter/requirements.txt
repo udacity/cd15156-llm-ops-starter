@@ -334,7 +334,7 @@ lia-web==0.3.1
     # via strawberry-graphql
 llm-guard==0.3.16
     # via llm-ops-project
-mako==1.3.11
+mako==1.3.12
     # via alembic
 markdown-it-py==4.0.0
     # via rich
@@ -564,8 +564,10 @@ platformdirs==4.9.6
     #   virtualenv
 pluggy==1.6.0
     # via pytest
-posthog==7.13.0
-    # via chromadb
+posthog==5.4.0
+    # via
+    #   chromadb
+    #   llm-ops-project
 pre-commit==4.6.0
     # via instructor
 preshed==3.0.13
@@ -742,6 +744,7 @@ shellingham==1.5.4
 six==1.17.0
     # via
     #   kubernetes
+    #   posthog
     #   python-dateutil
 smart-open==7.6.0
     # via weasel
@@ -848,7 +851,6 @@ typing-extensions==4.15.0
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-    #   posthog
     #   pydantic
     #   pydantic-core
     #   referencing
@@ -872,7 +874,7 @@ tzdata==2026.1
     #   pandas
 unidiff==0.7.5
     # via bc-detect-secrets
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   kubernetes
     #   requests
