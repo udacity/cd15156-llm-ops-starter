@@ -13,6 +13,12 @@ When you are graded, every deliverable below maps to a specific row in
 [`rubric.md`](rubric.md). Read the rubric alongside these instructions —
 the rubric tells you exactly what evidence to produce.
 
+> ⚠️ **Before you start, skim [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md).**
+> Most learners hit at least one of the pitfalls it documents (Phoenix
+> ports, the Vocareum budget cap, brand names flagged as PII, eval
+> timeouts). Each task below also links back to the specific items that
+> tend to bite on that task, so you'll see the relevant warning in time.
+
 ## Contents
 
 - [§1. The Scenario](#1-the-scenario)
@@ -22,8 +28,8 @@ the rubric tells you exactly what evidence to produce.
 - [§5. How the Starter Works](#5-how-the-starter-works)
 - [§6. Your Tasks](#6-your-tasks)
 - [§7. Submission Requirements](#7-submission-requirements)
-- [§8. Hints and Common Pitfalls](#8-hints-and-common-pitfalls)
-- [§9. Where to Get Help](#9-where-to-get-help)
+- [§8. Where to Get Help](#8-where-to-get-help)
+- [Troubleshooting: Hints and Common Pitfalls](TROUBLESHOOTING.md) *(separate page)*
 
 ---
 
@@ -101,7 +107,9 @@ proposal's stack in your own deployment, the architecture supports it
 
 Before you start:
 
-- [ ] **Python 3.11** is available (`python --version`).
+- [ ] **Python 3.12** is available (`python --version`). The Vocareum
+  Workspace ships 3.12; `uv` reads `.python-version` and provisions a
+  matching 3.12 interpreter automatically.
 - [ ] **`uv`** is installed (the project uses `uv`, not `pip` directly).
   See https://docs.astral.sh/uv/.
 - [ ] **Git** is configured.
@@ -124,6 +132,17 @@ Before you start:
   background in deploying, monitoring, and maintaining ML systems.
 
 ## 4. Workspace Setup
+
+**Starter code**: the capstone starter is the
+[`udacity/cd15156-llm-ops-starter`](https://github.com/udacity/cd15156-llm-ops-starter)
+repository (the project lives under its `starter/` directory). If you
+are working outside the Vocareum Workspace, clone it and run everything
+below from that `starter/` directory:
+
+```bash
+git clone https://github.com/udacity/cd15156-llm-ops-starter.git
+cd cd15156-llm-ops-starter/starter
+```
 
 The [README](README.md) has the canonical Quick Start. From the project
 root:
@@ -306,6 +325,8 @@ For each deliverable, the format is:
     -d '{"question": "TODO: a question only a new product can answer"}'
   # The response.sources should include your new product's doc_id.
   ```
+- **Common pitfalls**: [`make load-data` complains about an empty
+  Chroma](TROUBLESHOOTING.md#make-load-data-complains-about-an-empty-chroma).
 - **Rubric**: §1 Vector Database Populated.
 
 ### Task 2 — RAG Pipeline With Structured Output (~45 min)
@@ -333,6 +354,12 @@ For each deliverable, the format is:
   scratch script — `top_k` is a parameter on both
   `evaluate_pipeline` and `build_eval_dataset` and threads through
   `run_pipeline`.
+- **Common pitfalls**: [`make eval` prints `TimeoutError`
+  lines](TROUBLESHOOTING.md#make-eval-prints-timeouterror-lines) under
+  the shared proxy; they retry transparently, so watch the final
+  summary table. Every cell should come back with a real number,
+  including `context_precision` at `top_k=10` (a `NaN` there is a rare
+  slow-path artifact, not the expected result).
 - **Rubric**: §2 RAG pipeline with structured output and a tuned
   retrieval depth. The sweep is part of the pass threshold — a
   sweep table missing or covering fewer than three `top_k` values
@@ -383,6 +410,9 @@ For each deliverable, the format is:
   not hallucinate) or substitute a different borderline question.
   Note the `blocked_by` value in your §6 evidence; it's a free signal
   that the hallucination guard works end-to-end.
+- **Common pitfalls**: [the classifier falls back to "complex" on bad
+  JSON](TROUBLESHOOTING.md#the-classifier-falls-back-to-complex-on-bad-json).
+  Check this first if routing looks skewed toward `gpt-4o`.
 - **Rubric**: §3 LLM Gateway With Tiered Routing.
 
 ### Task 4 — Automated Data Ingestion (~20 min)
@@ -460,6 +490,10 @@ For each deliverable, the format is:
   distribution rather than a round number, and states what a
   violation triggers. Substitute your own metric and your own
   numbers.
+- **Common pitfalls**: [`make eval` prints `TimeoutError`
+  lines](TROUBLESHOOTING.md#make-eval-prints-timeouterror-lines). The
+  run still produces complete metrics; don't loop it while iterating
+  (~$0.03/run, see the budget note).
 - **Rubric**: §5 Automated evaluation suite with a data-driven
   regression threshold.
 
@@ -497,6 +531,13 @@ For each deliverable, the format is:
     -H 'Content-Type: application/json' \
     -d '{"question": "What paddle is good for beginners?"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
   ```
+- **Common pitfalls**: [first LLM Guard call hangs while it downloads
+  ~400 MB of models](TROUBLESHOOTING.md#first-llm-guard-call-hangs-for-several-minutes);
+  [brand names flagged as `pii_redacted:
+  person`](TROUBLESHOOTING.md#brand-names-flagged-as-pii_redacted-person)
+  (annotation, not a block); the
+  [forward-dependency rule](TROUBLESHOOTING.md#forward-dependency-rule)
+  if you add imports.
 - **Rubric**: §6 Input and Output Guardrails.
 
 #### Hallucination detection
@@ -551,6 +592,12 @@ To explore the comparison yourself:
   with one trace expanded showing per-step latencies, **or** the
   markdown output of `make show-traces` showing the same trace data.
   Include in your writeup.
+- **Common pitfalls**: [Phoenix dashboard not reachable in your
+  browser](TROUBLESHOOTING.md#phoenix-dashboard-is-not-reachable-in-your-browser)
+  (use `make show-traces`); [Phoenix UI shows no traces / an empty
+  `default` project](TROUBLESHOOTING.md#phoenix-ui-shows-no-traces-or-an-empty-default-project)
+  (switch to `llm-ops-capstone`); [Phoenix binds to all interfaces by
+  default](TROUBLESHOOTING.md#phoenix-ui-binds-to-all-interfaces-by-default).
 - **Rubric**: §7 Distributed tracing of the request pipeline.
 
 ### Task 8 — Cost Monitoring, Per-Tier Summary, and Savings Analysis (~30 min)
@@ -599,6 +646,9 @@ deliverable. Three sub-parts, all required:
   open http://localhost:8080/cost-dashboard  # macOS — or curl + screenshot
   make cost-report                            # prints per-tier table + savings
   ```
+- **Common pitfalls**: [the cost-log file grows
+  large](TROUBLESHOOTING.md#cost-log-file-grows-large). That's normal;
+  don't delete it between Task 8 and Task 9, they share it.
 - **Rubric**: §8 Cost monitoring, per-tier summary, and savings vs.
   a single-model baseline.
 
@@ -626,6 +676,9 @@ last row in the rubric and the one reviewers verify last.
   make verify     # 0 failed
   git ls-files | grep -E '(^|/)\.env$'   # empty
   ```
+- **Common pitfalls**: [tests assume the conftest mocks all external
+  SDKs](TROUBLESHOOTING.md#tests-assume-the-conftest-mocks-all-external-sdks).
+  If `make test` fails on an import, this is usually why.
 - **Rubric**: §9 Documented implementation, evidence, and
   reproducible repository.
 
@@ -743,84 +796,12 @@ item should be true:
 - [ ] Branch name and commit SHA are listed in your submission notes
       so the reviewer knows exactly what to clone.
 
-## 8. Hints and Common Pitfalls
+## 8. Where to Get Help
 
-- **Phoenix dashboard isn't reachable in your browser.** Some learner
-  workspaces don't expose port 6006. You can still satisfy rubric §7:
-  run `make show-traces` to get the same trace data as a markdown
-  export. Include the markdown in your writeup instead of a screenshot.
-- **Phoenix UI shows "no traces" or an empty `default` project.** The
-  app registers spans under the **`llm-ops-capstone`** project, not
-  `default`. Use the project picker in the top-left of the Phoenix
-  dashboard to switch. If you also see stale projects like
-  `udacity-llm-ops` or a typo'd `llm-ops-captone` in the dropdown,
-  those are remnants from prior runs persisted in `data/phoenix/` and
-  can be ignored — your current traces are in `llm-ops-capstone`.
-- **`make load-data` complains about an empty Chroma.** Chroma runs
-  in-process via `chromadb.PersistentClient`. If `data/chroma/` is
-  missing or unwritable, `make load-data` fails. Delete the directory
-  and re-run to reset.
-- **Vocareum returns `BadRequestError: Insufficient budget available.
-  Reason: Exceeded budget 10 > X.X`.** Your Vocareum API key has a
-  $10 lifetime cap and you've consumed it. This is **not** a code bug
-  — the proxy returns a 400 before any tokens are billed, so the
-  failed call costs you nothing. Contact course support for a top-up.
-  While you wait, you can continue any work that doesn't make LLM
-  calls (writing your WRITEUP, running `make test`, examining traces
-  already in Phoenix). Reduce future burn by treating
-  `make eval-topk-sweep` (~$0.10) as a once-per-submission deliverable
-  and not running `make eval` (~$0.03) in a loop while iterating.
-- **`make eval` / `make eval-topk-sweep` prints `TimeoutError` lines.** The
-  Vocareum OpenAI proxy is shared, and tail latencies of 30–60 s for a
-  single request are common under the parallelism RAGAS uses. RAGAS retries
-  each timed-out call transparently, so a noisy log with dozens of
-  `TimeoutError` warnings still produces complete metrics — one
-  example-solutions run logged ~43 timeouts during the top-k sweep and
-  still emitted a clean comparison table. Watch the final summary, not the
-  intermediate warnings. If a metric comes back `NaN` (e.g.,
-  `context_precision` at `top_k=10`), re-run that single configuration;
-  persistent NaN points to genuine retrieval coverage issues, not the proxy.
-- **First LLM Guard call hangs for several minutes.** The library
-  downloads ~400 MB of HuggingFace transformer models (DeBERTa for
-  injection, Presidio NER for PII, BanTopics zero-shot, NLI for
-  factuality) on first use. Pre-cache them with
-  `make install-guardrails-models`.
-- **Brand names show up as `pii_redacted: person` in `/query`
-  responses.** Asking about something like the Selkirk AMPED S2 returns
-  a normal answer **and** `blocked_by: "pii_redacted: person"` in the
-  same response. This is annotation, not a block — the request flowed
-  through, the answer is real, and you should treat the response as
-  successful. Presidio's NER model flags single capitalized tokens that
-  match person-name distributions; brand names like "Selkirk", "Joola",
-  and "Diadem" hit this pattern. The `/query` route calls
-  `_annotate_pii` (not `_safe_response`) for PII detections, so the
-  original answer is preserved. If the annotation becomes noisy in
-  your own deployment, you can either drop `PERSON` from Presidio's
-  entity list for product domains or add a brand-name allowlist to
-  `Anonymize`'s vault — both follow-up exercises beyond the core
-  curriculum.
-- **Cost-log file grows large.** Each query is a JSON line. After a
-  50-query run you'll have ~12 KB of log; that's normal. Don't delete
-  the log between Task 8 and Task 9 — they share it.
-- **Phoenix UI binds to `0.0.0.0:6006` by default.** Fine on a
-  single-user GCP container, but on a multi-tenant or
-  internet-reachable host, override `PHOENIX_HOST=127.0.0.1` (or put
-  it behind an authenticating reverse proxy) before exposing the box.
-- **Tests assume the conftest mocks all external SDKs.** Don't import
-  any external SDK at module-import time outside `src/` —
-  `tests/conftest.py` patches the constructors of `chromadb`,
-  `openai`, `phoenix`, and `llm_guard` scanners before any
-  test runs.
-- **The classifier falls back to "complex" on bad JSON.** That's the
-  safer (more capable, more expensive) default. If your routing
-  decisions look skewed toward `gpt-4o`, check whether the classifier
-  is actually returning JSON.
-- **Forward-dependency rule.** Don't add an `import` from a "later"
-  package to an "earlier" one. The fitness function in
-  `tests/integration/test_dependency_graph.py` will fail.
-
-## 9. Where to Get Help
-
+- **Hints and common pitfalls** —
+  [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md). Skim it before you start;
+  it's the fastest way to tell "working as designed" apart from
+  "actually broken."
 - **Course content** — every layer in the starter is taught in a
   matching module. The module dictionary lives at the repository root:
   `references/module-dictionary-C2-SUBMIT.csv`.

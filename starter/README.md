@@ -179,7 +179,7 @@ project/
 ├── tests/                            # 195 pytest tests; mirrors src/ tree
 ├── scripts/                          # operator entry points (load_data, run_eval, etc.)
 ├── Makefile                          # one-line entry points (setup, serve, eval)
-└── pyproject.toml                    # uv-managed deps, Python 3.11
+└── pyproject.toml                    # uv-managed deps, Python 3.12
 ```
 
 ---
