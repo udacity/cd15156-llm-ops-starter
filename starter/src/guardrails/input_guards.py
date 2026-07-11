@@ -23,20 +23,6 @@ INJECTION_PATTERNS: list[re.Pattern] = [
     re.compile(r"^\s*system\s*[:>]", re.IGNORECASE | re.MULTILINE),
     re.compile(r"^\s*assistant\s*[:>]", re.IGNORECASE | re.MULTILINE),
     re.compile(r"<\s*\|?\s*im_start\s*\|?\s*>", re.IGNORECASE),
-    re.compile(
-        r"\b(reveal|show|print|leak|repeat|tell\s+me)\s+(your|the)\s+"
-        r"(system|initial|original|hidden|secret)\s+(prompt|instructions?|rules?|message)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(bypass|override|turn\s+off|disable|ignore)\s+(your|the|all)?\s*"
-        r"(safety|guardrails?|filters?|restrictions?|content\s+policy|policies)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(
-        r"\b(jailbreak\s+mode|DAN\s+mode|developer\s+mode|do\s+anything\s+now)\b",
-        re.IGNORECASE,
-    ),
 ]
 
 PII_PATTERNS: dict[str, re.Pattern] = {
