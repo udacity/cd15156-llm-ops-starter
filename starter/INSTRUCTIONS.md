@@ -148,7 +148,7 @@ The [README](README.md) has the canonical Quick Start. From the project
 root:
 
 ```bash
-make setup            # uv sync — installs all deps
+make setup            # verify env: Workspace installs nothing; local runs uv sync
 make load-data        # seed the vector DB from data/products/
 cp .env.example .env  # then fill in your keys (see below)
 make serve            # FastAPI on http://localhost:8080
@@ -252,7 +252,7 @@ what triggers a re-run.
 | Command | Re-run when… | Safe to run repeatedly? |
 |---|---|---|
 | `cp .env.example .env` | The Workspace was reset, or you accidentally deleted `.env`. | **No** — it overwrites your edited `.env` and erases your `OPENAI_API_KEY`. Only run on a fresh clone or after a Workspace reset. |
-| `make setup` (`uv sync`) | `pyproject.toml` or `uv.lock` changed. | **Yes** — idempotent. Runs in <1 s when nothing changed. |
+| `make setup` | On the Workspace: whenever you want to confirm the image is complete (it installs nothing). On a local machine: when `pyproject.toml` or `uv.lock` changed (runs `uv sync`). | **Yes** — idempotent. Verifies in <1 s; a local `uv sync` is a no-op when nothing changed. |
 | `make install-guardrails-models` | The Workspace was reset, or HuggingFace cache (`~/.cache/huggingface/`) was cleared. | **Yes** — idempotent. Skips already-cached models in seconds. |
 | `make load-data` | You edited `data/products/`, or `data/chroma/` was deleted. | **Yes** — `chromadb.upsert` is idempotent on `product_id`. **Caveat**: if you *removed* a product file, `make load-data` will not delete the orphaned row from Chroma. To get a fully clean state, delete `data/chroma/` first, then re-run `make load-data`. |
 | `make serve` | The server crashed or the Workspace was reset. | **Yes** — but only one process can bind port 8080 at a time. If you re-run while another is up, the second invocation will fail with "address already in use". The server auto-reloads on changes under `src/`, so you don't need to restart for code edits. |
@@ -384,20 +384,20 @@ For each deliverable, the format is:
   # Simple — single-fact lookup, expect gpt-4o-mini.
   curl -X POST http://localhost:8080/query \
     -H 'Content-Type: application/json' \
-    -d '{"question":"What is the weight of the Selkirk AMPED S2?"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
+    -d '{"question":"What is the weight of the Selkirk AMPED S2?"}' | uv run --no-project python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
 
   # Complex — multi-product comparison with subjective tradeoff,
   # expect gpt-4o.
   curl -X POST http://localhost:8080/query \
     -H 'Content-Type: application/json' \
-    -d '{"question":"Compare the Selkirk Vanguard Power Air and the JOOLA Hyperion CFS 16 for a player with arm fatigue who wants tournament-grade power."}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
+    -d '{"question":"Compare the Selkirk Vanguard Power Air and the JOOLA Hyperion CFS 16 for a player with arm fatigue who wants tournament-grade power."}' | uv run --no-project python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
 
   # Borderline — single product but a subjective compound qualifier.
   # The classifier could go either way; capture which it picked and
   # reason about why.
   curl -X POST http://localhost:8080/query \
     -H 'Content-Type: application/json' \
-    -d '{"question":"Is the Engage Pursuit MX a forgiving choice for someone who plays casually on weekends?"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
+    -d '{"question":"Is the Engage Pursuit MX a forgiving choice for someone who plays casually on weekends?"}' | uv run --no-project python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['model'], indent=2))"
   ```
 - **Heads-up about the multi-layer pipeline**: if any of these curls
   returns `model=""` together with a `blocked_by` value mentioning
@@ -526,10 +526,10 @@ For each deliverable, the format is:
   # Add patterns, then:
   curl -X POST http://localhost:8080/query \
     -H 'Content-Type: application/json' \
-    -d '{"question": "(input that should trigger a new pattern)"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
+    -d '{"question": "(input that should trigger a new pattern)"}' | uv run --no-project python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
   curl -X POST http://localhost:8080/query \
     -H 'Content-Type: application/json' \
-    -d '{"question": "What paddle is good for beginners?"}' | uv run python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
+    -d '{"question": "What paddle is good for beginners?"}' | uv run --no-project python -c "import sys, json; print(json.dumps(json.load(sys.stdin)['blocked_by'], indent=2))"
   ```
 - **Common pitfalls**: [first LLM Guard call hangs while it downloads
   ~400 MB of models](TROUBLESHOOTING.md#first-llm-guard-call-hangs-for-several-minutes);
@@ -704,7 +704,7 @@ at scale).
   least 3 hit the cache (`response.cached == true`). Inspect cache
   contents with:
   ```bash
-  uv run python -c "
+  uv run --no-project python -c "
   import chromadb
   c = chromadb.PersistentClient(path='data/chroma').get_or_create_collection('cache')
   print(f'cache entries: {c.count()}')
@@ -742,7 +742,7 @@ at scale).
   warmed.
 - **How to verify**:
   ```bash
-  uv run python -c '
+  uv run --no-project python -c '
   from src.optimization.streaming import compare_ttft
   for q in ["q1", "q2", "q3"]:
       print(q, compare_ttft(q))

@@ -6,10 +6,10 @@ Phoenix server (running inside ``make serve``) via ``phoenix.Client``
 and renders a per-trace summary using ``src.tracing.trace_export``.
 
 Usage:
-    uv run python scripts/show_traces.py                       # markdown
-    uv run python scripts/show_traces.py --last 20             # last 20
-    uv run python scripts/show_traces.py --json                # JSON
-    uv run python scripts/show_traces.py --output traces.md    # write file
+    uv run --no-project python scripts/show_traces.py                       # markdown
+    uv run --no-project python scripts/show_traces.py --last 20             # last 20
+    uv run --no-project python scripts/show_traces.py --json                # JSON
+    uv run --no-project python scripts/show_traces.py --output traces.md    # write file
 
 Or via the Makefile shortcut:
     make show-traces

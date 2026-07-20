@@ -14,7 +14,11 @@ dependencies = [
     # positionally, but posthog>=6 made those args keyword-only, so every
     # telemetry send raises TypeError. posthog<6 keeps the call valid.
     "posthog>=2.4.0,<6",
-    "openai>=1.30,<3",
+    # Pinned <2 to match the Vocareum Workspace image (openai==1.109.1) and the
+    # tested 1.x SDK path — the 2.x client changed exception/response APIs. The
+    # image is built from exercises/requirements.txt, which pins openai<2; keep
+    # this bound aligned so a local `uv sync` resolves the same major version.
+    "openai>=1.30,<2",
     "tiktoken>=0.7,<1",
     "ragas==0.4.3",
     # Direct dep used by src/evaluation/run_eval.py to wrap an OpenAI

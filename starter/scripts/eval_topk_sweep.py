@@ -14,7 +14,7 @@ Usage:
     set -a; source .env; set +a   # if your .env isn't already loaded
     make eval-topk-sweep
     # or
-    uv run python scripts/eval_topk_sweep.py --topks 1,3,5,10
+    uv run --no-project python scripts/eval_topk_sweep.py --topks 1,3,5,10
 """
 
 import argparse

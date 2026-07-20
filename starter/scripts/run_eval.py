@@ -1,4 +1,4 @@
-"""CLI: ``make eval`` → ``uv run python scripts/run_eval.py``."""
+"""CLI: ``make eval`` → ``uv run --no-project python scripts/run_eval.py``."""
 
 import argparse
 import json
