@@ -188,14 +188,14 @@ project/
 
 | Command | What it does |
 |---|---|
-| `make setup` | `uv sync` — install deps |
+| `make setup` | Verify the environment. On the Udacity Workspace the image already ships every dependency, so this installs nothing; on a local machine it runs `uv sync`. |
 | `make serve` | `uvicorn src.gateway.app:app --reload --port 8080` |
 | `make serve-proxy` | Same as `make serve` plus `--root-path /proxy/8080` and `PHOENIX_HOST_ROOT_PATH=/proxy/6006` (Udacity Workspace; lets `/docs` and the Phoenix UI load through the workspace proxy) |
 | `make watch` | Run `scripts/start_watcher.py` against `data/inbox/` |
 | `make load-data` | One-shot load of `data/products/*.json` into Chroma |
 | `make eval` | Run RAGAS over `data/golden_test_set.csv` |
 | `make install-guardrails-models` | Pre-download LLM Guard's ~400 MB of models |
-| `make test` | `uv run pytest tests/ -q` |
+| `make test` | `uv run --no-project pytest tests/ -q` |
 | `make verify` | Run the project's verification checklist (`scripts/verify_capstone.py`) |
 
 ---

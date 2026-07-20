@@ -1,7 +1,7 @@
 """Bootstrap the product corpus into Chroma.
 
 Usage:
-    uv run python scripts/load_data.py
+    uv run --no-project python scripts/load_data.py
     # or: make load-data
 """
 

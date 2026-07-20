@@ -5,7 +5,7 @@ and prints what the operator must check manually (anything that needs a
 running OpenAI key + Phoenix tracing).
 
 Usage:
-    uv run python scripts/verify_capstone.py
+    uv run --no-project python scripts/verify_capstone.py
 """
 
 import subprocess
@@ -23,7 +23,7 @@ class Check:
 def _pytest_subset(label: str, *paths: str) -> tuple[str, str]:
     """Run a subset of pytest paths; return ('PASS'|'FAIL', summary)."""
     result = subprocess.run(
-        ["uv", "run", "pytest", *paths, "-q", "--no-header"],
+        ["uv", "run", "--no-project", "pytest", *paths, "-q", "--no-header"],
         capture_output=True,
         text=True,
     )

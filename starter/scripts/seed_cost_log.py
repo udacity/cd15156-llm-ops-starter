@@ -12,8 +12,8 @@ preserves any pre-existing rows.
 
 Usage:
     make seed-cost-log              # append to 50 entries (no-op if already there)
-    uv run python scripts/seed_cost_log.py --reset   # wipe and regenerate
-    uv run python scripts/seed_cost_log.py --target 100   # custom target
+    uv run --no-project python scripts/seed_cost_log.py --reset   # wipe and regenerate
+    uv run --no-project python scripts/seed_cost_log.py --target 100   # custom target
 """
 
 import argparse

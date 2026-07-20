@@ -1,4 +1,4 @@
-"""CLI: ``make watch`` → ``uv run python scripts/start_watcher.py``.
+"""CLI: ``make watch`` → ``uv run --no-project python scripts/start_watcher.py``.
 
 Runs the file-watcher as a separate process. Handles SIGINT/SIGTERM
 gracefully so Ctrl+C and ``docker stop`` shut down cleanly.
@@ -12,7 +12,7 @@ from pathlib import Path
 from threading import Event
 
 # Make the project root importable when run directly (e.g.
-# `uv run python scripts/start_watcher.py`). The make targets get this from the
+# `uv run --no-project python scripts/start_watcher.py`). The make targets get this from the
 # Makefile's `export PYTHONPATH := .`; a direct script invocation does not.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

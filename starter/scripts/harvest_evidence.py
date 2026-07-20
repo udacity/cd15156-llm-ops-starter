@@ -16,7 +16,7 @@ emit a `(REQ-X not yet shipped — see INSTRUCTIONS Task X)` marker.
 Usage:
     make serve              # in another terminal
     make harvest-evidence   # ~5–15 min wall clock; writes WRITEUP-draft.md
-    uv run python scripts/harvest_evidence.py --skip-slow   # skip §2 sweep
+    uv run --no-project python scripts/harvest_evidence.py --skip-slow   # skip §2 sweep
 """
 
 import argparse
@@ -65,7 +65,7 @@ def _ensure_cost_log_seeded() -> None:
     if count < 50:
         print(f"  Pre-flight: cost log has {count}/50 entries — seeding ...", file=sys.stderr)
         subprocess.run(
-            ["uv", "run", "python", "scripts/seed_cost_log.py"],
+            ["uv", "run", "--no-project", "python", "scripts/seed_cost_log.py"],
             cwd=STARTER_ROOT, check=False,
         )
 
@@ -113,7 +113,7 @@ def section_2_topk_sweep(skip_slow: bool) -> str:
             "section, or paste the output of `make eval-topk-sweep` here.)_"
         )
     out = subprocess.run(
-        ["uv", "run", "python", "scripts/eval_topk_sweep.py"],
+        ["uv", "run", "--no-project", "python", "scripts/eval_topk_sweep.py"],
         cwd=STARTER_ROOT, capture_output=True, text=True, check=False,
     )
     if out.returncode != 0:
@@ -168,7 +168,7 @@ def section_4_ingestion() -> str:
 def section_5_eval_threshold() -> str:
     """§5: aggregate metrics + threshold-proposal placeholder."""
     out = subprocess.run(
-        ["uv", "run", "python", "scripts/run_eval.py", "--limit", "10"],
+        ["uv", "run", "--no-project", "python", "scripts/run_eval.py", "--limit", "10"],
         cwd=STARTER_ROOT, capture_output=True, text=True, check=False,
     )
     if out.returncode != 0:
@@ -202,7 +202,7 @@ def section_6_guardrails() -> str:
 
 def section_7_tracing() -> str:
     out = subprocess.run(
-        ["uv", "run", "python", "scripts/seed_traces.py"],
+        ["uv", "run", "--no-project", "python", "scripts/seed_traces.py"],
         cwd=STARTER_ROOT, capture_output=True, text=True, check=False,
     )
     if out.returncode != 0:
@@ -235,7 +235,7 @@ def section_8_cost_dashboard() -> str:
 
 def section_9_cost_savings() -> str:
     out = subprocess.run(
-        ["uv", "run", "python", "scripts/cost_report.py"],
+        ["uv", "run", "--no-project", "python", "scripts/cost_report.py"],
         cwd=STARTER_ROOT, capture_output=True, text=True, check=False,
     )
     if out.returncode != 0:
